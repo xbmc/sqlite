@@ -1,21 +1,31 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(sqlite LANGUAGES C)
-
-set(sqlite_VERSION 3.13.0)
+project(sqlite3 VERSION 3.13.0 LANGUAGES C)
 
 if(MSVC)
   set(CMAKE_DEBUG_POSTFIX "d")
 endif()
 
 
-add_library(sqlite STATIC
+  
+add_library(sqlite3
   sqlite3.h
   sqlite3ext.h
   sqlite3.c
 )
+
+if(BUILD_SHARED_LIBS)
+  target_compile_definitions(sqlite3
+    PRIVATE
+    SQLITE_THREADSAFE=1
+    "SQLITE_API=_declspec(dllexport)"
+    INTERFACE
+    "SQLITE_API=_declspec(dllimport)"
+  )
+endif()
+
 target_include_directories(
-  sqlite PRIVATE
+  sqlite3 PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   INTERFACE
   $<INSTALL_INTERFACE:include>
@@ -23,12 +33,12 @@ target_include_directories(
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-  ${CMAKE_CURRENT_BINARY_DIR}/sqlite-config-version.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/sqlite3-config-version.cmake
   VERSION ${sqlite_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 
-install(TARGETS sqlite EXPORT sqlite
+install(TARGETS sqlite3 EXPORT sqlite3
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib)
@@ -39,18 +49,25 @@ install(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/sqlite3ext.h
   DESTINATION include)
 
-install(EXPORT sqlite
+install(EXPORT sqlite3
   FILE
-    sqlite.cmake
+    sqlite3.cmake
   NAMESPACE
-    sqlite::
+    sqlite3::
   DESTINATION
-    lib/cmake/sqlite
+    lib/cmake/sqlite3
 )
 install(
   FILES
-    cmake/sqlite-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/sqlite-config-version.cmake
+    cmake/sqlite3-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/sqlite3-config-version.cmake
   DESTINATION
-    lib/cmake/sqlite
+    lib/cmake/sqlite3
 )
+
+if(MSVC AND BUILD_SHARED_LIBS)
+  install(FILES
+    $<TARGET_PDB_FILE:sqlite3>
+    DESTINATION lib
+  )
+endif()
