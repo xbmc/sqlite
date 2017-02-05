@@ -17,10 +17,19 @@ add_library(sqlite3
 if(BUILD_SHARED_LIBS)
   target_compile_definitions(sqlite3
     PRIVATE
+    WINDLL
     SQLITE_THREADSAFE=1
+    SQLITE_ENABLE_UNLOCK_NOTIFY
     "SQLITE_API=_declspec(dllexport)"
     INTERFACE
     "SQLITE_API=_declspec(dllimport)"
+  )
+endif()
+
+if(CMAKE_SYSTEM_NAME EQUAL "WindowsStore")
+  target_compile_definitions(sqlite3
+    PRIVATE
+    SQLITE_OS_WINRT
   )
 endif()
 
@@ -41,13 +50,15 @@ write_basic_package_version_file(
 install(TARGETS sqlite3 EXPORT sqlite3
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
+  LIBRARY DESTINATION lib
+)
 
 
 install(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.h
   ${CMAKE_CURRENT_SOURCE_DIR}/sqlite3ext.h
-  DESTINATION include)
+  DESTINATION include
+)
 
 install(EXPORT sqlite3
   FILE
